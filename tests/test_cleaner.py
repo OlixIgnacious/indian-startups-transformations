@@ -54,6 +54,16 @@ def test_split_investors():
     assert isinstance(df["investor_list"].iloc[0], list)
 
 def test_clean_startup_name():
-    df = pd.read_csv(DATA_PATH)
-    df["Startup"] = df["Startup"].apply(clean_startup_name)
-    assert df["Startup"].str.contains(r"\s+", regex=True, na=False).any()
+    # focussed unit test that matches clean_startup_name behavior
+    raw = pd.Series([
+        "Open Appliances Pvt. Ltd.\n",
+        "  HungerBox   \n",
+        "Mystifly\n\nLabs",
+    ])
+    cleaned = raw.apply(clean_startup_name)
+
+    # strips leading/trailing whitespace and newlines
+    assert cleaned.iloc[0] == "Open Appliances Pvt. Ltd."
+    assert cleaned.iloc[1] == "HungerBox"
+    # replaces internal newlines with a space and collapses multiple whitespace
+    assert cleaned.iloc[2] == "Mystifly Labs"
