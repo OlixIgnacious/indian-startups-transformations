@@ -64,7 +64,7 @@ def clean_amount_column(df: pd.DataFrame, col: str = "amount") -> pd.DataFrame:
     #df[col] = df[col].str.replace(r"[\$,€£¥]", "", regex=True)
     df[col] = df[col].str.replace(r"[^0-9\.\-]", '', regex=True).replace('', pd.NA)
     df[col] = pd.to_numeric(df[col], errors='coerce')
-    s = s.replace(
+    df[col] = df[col].replace(
      to_replace=["Undisclosed", "undisclosed"],
      value=pd.NA,
     )
