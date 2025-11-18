@@ -64,11 +64,15 @@ def clean_amount_column(df: pd.DataFrame, col: str = "amount") -> pd.DataFrame:
     #df[col] = df[col].str.replace(r"[\$,€£¥]", "", regex=True)
     df[col] = df[col].str.replace(r"[^0-9\.\-]", '', regex=True).replace('', pd.NA)
     df[col] = pd.to_numeric(df[col], errors='coerce')
+    s = s.replace(
+     to_replace=["Undisclosed", "undisclosed"],
+     value=pd.NA,
+    )
     return df
 
 def parse_dates(df: pd.DataFrame, col: str = "date") -> pd.DataFrame:
     df = df.copy()
-    df[col] = pd.to_datetime(df[col], errors='coerce') 
+    df[col] = pd.to_datetime(df[col], dayfirst=True, errors='coerce') 
     return df
 
 def date_analysis(df: pd.DataFrame, date_col: str = "date") -> pd.DataFrame:
@@ -83,9 +87,14 @@ def canonical_investment_type(s: pd.Series) -> pd.Series:
     out = out.where(out.isin(set(CANONICAL_PATTERNS.values())), other="other")
     return out
 
-def split_investors(s: pd.Series) -> pd.Series:
-    s = s.astype(str).str.strip()
-    out = s.fillna("").str.split(SPLIT_PATTERN)
+def split_investors(df: pd.DataFrame, col: str = "Investor") -> pd.DataFrame:
+    out = df.copy()
+    out["investor_list"] = out[col].astype(str).str.strip()
+    out["investor_list"]  = out["investor_list"] .fillna("").str.split(SPLIT_PATTERN)
+    out["investor_list"]  = out["investor_list"] .apply(lambda lst: [x.strip() for x in lst if x and x.strip()])
+    out["investor_list"]  = out["investor_list"] .apply(lambda lst: [x for x in lst if x.lower() != "others"])
+    out["investor_count"] = out["investor_list"].apply(len)
+    out["investor_count"] = out["investor_list"].apply(len)
     return out
 
 def clean_startup_name(name: str) -> str:
@@ -94,5 +103,7 @@ def clean_startup_name(name: str) -> str:
     s = name.strip()
     s = re.sub(SUFFIX_PATTERN, "", s, flags=re.IGNORECASE | re.VERBOSE)
     s = re.sub(r'\bpvt\.?\b', '', s, flags=re.IGNORECASE)
+    s = re.sub(r"\n", "", s)
+    s = re.sub(r"\s+", " ", s)
     return s.strip()
 
