@@ -1,60 +1,53 @@
 import pandas as pd
 from typing import Any
 import re
+from transforms.patterns.industry import INDUSTRY_PATTERNS_ORDERED
+from transforms.patterns.city import CITY_MAP
+from transforms.patterns.investors import INVESTOR_SPLIT_PATTERN
+from transforms.patterns.canonical import CANONICAL_PATTERNS
 
-CANONICAL_PATTERNS = {
-    r"^angel.*": "angel",
-    r".*angel funding.*": "angel",
-    r"^seed.*": "seed",
-    r".*seed funding.*": "seed",
-    r".*seed / angel.*": "seed",
-    r"^pre[\s\-]?seed.*": "pre_seed",
-    r"^pre[\s\-]?series a.*": "pre_seed",   # or "pre_series_a"
-    r"^series [a-z0-9].*": "series",
-    r".*venture.*": "venture",
-    r".*private equity.*": "private_equity",
-    r".*debt.*": "debt",
-    r".*equity.*": "equity",
-    r".*mezzanine.*": "mezzanine",
-    r".*m&a.*": "ma",
-    r".*bridge.*": "bridge",
-    r".*secondary market.*": "secondary_market",
-    r".*in progress.*": "in_progress",
-    r".*unspecified.*": "unspecified",
-}
 
-SPLIT_PATTERN = r",\s*|;\s*|/\s*|\s+and\s+|\s+AND\s+|\n+"
+# CANONICAL_PATTERNS = {
+#     r"^angel.*": "angel",
+#     r".*angel funding.*": "angel",
+#     r"^seed.*": "seed",
+#     r".*seed funding.*": "seed",
+#     r".*seed / angel.*": "seed",
+#     r"^pre[\s\-]?seed.*": "pre_seed",
+#     r"^pre[\s\-]?series a.*": "pre_seed",   # or "pre_series_a"
+#     r"^series [a-z0-9].*": "series",
+#     r".*venture.*": "venture",
+#     r".*private equity.*": "private_equity",
+#     r".*debt.*": "debt",
+#     r".*equity.*": "equity",
+#     r".*mezzanine.*": "mezzanine",
+#     r".*m&a.*": "ma",
+#     r".*bridge.*": "bridge",
+#     r".*secondary market.*": "secondary_market",
+#     r".*in progress.*": "in_progress",
+#     r".*unspecified.*": "unspecified",
+# }
 
-SUFFIX_PATTERN = r"""
-    \s+(
-        pvt\.?\s*ltd      |   # Pvt Ltd / Pvt. Ltd
-        private\s*limited |   # Private Limited
-        ltd\.?            |   # Ltd / Ltd.
-        limited           |   # Limited
-        inc\.?            |   # Inc / Inc.
-        incorporated      |
-        corp\.?           |
-        corporation
-    )\s*$
-"""   
-INDUSTRY_PATTERNS_ORDERED = [
-    (r"\bed[\s\-]?tech\b", "edtech"),
-    (r"\b(edutech|edutech|edu tech)\b", "edtech"),  # extra safety
-    (r"\bfin[\s\-]?tech\b|\bfinancial\b|\bfinance\b", "fintech"),
-    (r"\bb2b[\s\-]?e[\s\-]?commerce\b|\be[\s\-]?commerce\b", "ecommerce"),
-    # SaaS/Tech must be specific: match 'saas' or 'technology provider' or 'tech provider' NOT bare 'tech'
-    (r"\bsaas\b|\btechnology\s*provider\b|\btech\s*provider\b", "saas_tech"),
-    (r"\bfood\b|\bbeverage\b", "food_beverage"),
-    (r"\bagri[\s\-]?tech\b|\bagritech\b", "agritech"),
-    (r"\bhealth\b", "healthtech"),
-    (r"\btransport(ation)?\b", "transport"),
-    (r"\blifestyle\b", "lifestyle"),
-    (r"\bhospital\b|\bhospitality\b", "hospitality"),
-    (r"\badvertis", "advertising"),
-    (r"\bdigital\b", "digital"),
-    (r"\bdairy\b", "dairytech"),
-    (r"\bsupply\s*chain\b", "supply_chain"),
-] 
+# # INVESTOR_SPLIT_PATTERN = r",\s*|;\s*|/\s*|\s+and\s+|\s+AND\s+|\n+"
+  
+# INDUSTRY_PATTERNS_ORDERED = [
+#     (r"\bed[\s\-]?tech\b", "edtech"),
+#     (r"\b(edutech|edutech|edu tech)\b", "edtech"),  # extra safety
+#     (r"\bfin[\s\-]?tech\b|\bfinancial\b|\bfinance\b", "fintech"),
+#     (r"\bb2b[\s\-]?e[\s\-]?commerce\b|\be[\s\-]?commerce\b", "ecommerce"),
+#     # SaaS/Tech must be specific: match 'saas' or 'technology provider' or 'tech provider' NOT bare 'tech'
+#     (r"\bsaas\b|\btechnology\s*provider\b|\btech\s*provider\b", "saas_tech"),
+#     (r"\bfood\b|\bbeverage\b", "food_beverage"),
+#     (r"\bagri[\s\-]?tech\b|\bagritech\b", "agritech"),
+#     (r"\bhealth\b", "healthtech"),
+#     (r"\btransport(ation)?\b", "transport"),
+#     (r"\blifestyle\b", "lifestyle"),
+#     (r"\bhospital\b|\bhospitality\b", "hospitality"),
+#     (r"\badvertis", "advertising"),
+#     (r"\bdigital\b", "digital"),
+#     (r"\bdairy\b", "dairytech"),
+#     (r"\bsupply\s*chain\b", "supply_chain"),
+# ] 
 
 def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
     def _snake_case(s: Any) -> str:
@@ -113,8 +106,8 @@ def split_investors(df: pd.DataFrame, col: str = "investor") -> pd.DataFrame:
     # ensure we handle missing values BEFORE casting to str
     series = out[col].where(out[col].notna(), "")
     series = series.astype(str).str.strip()
-    split_pattern = r",\s*|;\s*|/\s*|\s+and\s+|\s+AND\s+|\n+"
-    out["investor_list"] = series.str.split(split_pattern)
+    # INVESTOR_SPLIT_PATTERN = r",\s*|;\s*|/\s*|\s+and\s+|\s+AND\s+|\n+"
+    out["investor_list"] = series.str.split(INVESTOR_SPLIT_PATTERN)
 
     # clean each list: strip, drop empty, drop 'others'
     def clean_list(lst):

@@ -1,0 +1,1 @@
+INVESTOR_SPLIT_PATTERN = r",\s*|;\s*|/\s*|\s+and\s+|\s+AND\s+|\n+"

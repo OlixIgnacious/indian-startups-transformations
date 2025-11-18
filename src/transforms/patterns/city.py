@@ -1,0 +1,16 @@
+CITY_MAP = {
+    "bengaluru": "bengaluru",
+    "bangalore": "bengaluru",
+    "gurgaon": "gurgaon",
+    "gurugram": "gurgaon",
+    "mumbai": "mumbai",
+    "delhi": "delhi",
+    "new delhi": "delhi",
+    "pune": "pune",
+    "hyderabad": "hyderabad",
+    "chennai": "chennai",
+    "jaipur": "jaipur",
+    "patna": "patna",
+    "ahmedabad": "ahmedabad",
+    "ahemadabad": "ahmedabad",
+}

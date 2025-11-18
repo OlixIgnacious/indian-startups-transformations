@@ -1,0 +1,20 @@
+CANONICAL_PATTERNS = {
+    r"^angel.*": "angel",
+    r".*angel funding.*": "angel",
+    r"^seed.*": "seed",
+    r".*seed funding.*": "seed",
+    r".*seed / angel.*": "seed",
+    r"^pre[\s\-]?seed.*": "pre_seed",
+    r"^pre[\s\-]?series a.*": "pre_seed",   # or "pre_series_a"
+    r"^series [a-z0-9].*": "series",
+    r".*venture.*": "venture",
+    r".*private equity.*": "private_equity",
+    r".*debt.*": "debt",
+    r".*equity.*": "equity",
+    r".*mezzanine.*": "mezzanine",
+    r".*m&a.*": "ma",
+    r".*bridge.*": "bridge",
+    r".*secondary market.*": "secondary_market",
+    r".*in progress.*": "in_progress",
+    r".*unspecified.*": "unspecified",
+}
