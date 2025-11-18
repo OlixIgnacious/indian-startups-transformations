@@ -67,3 +67,14 @@ def test_clean_startup_name():
     assert cleaned.iloc[1] == "HungerBox"
     # replaces internal newlines with a space and collapses multiple whitespace
     assert cleaned.iloc[2] == "Mystifly Labs"
+    
+def test_normalize_industry_edtech_not_saas():
+    from transforms.cleaner import normalize_industry
+    s = pd.Series(["Edu-tech", "EdTech", "EduTech", "Edu Tech", "Technology Provider", "Tech Provider"])
+    out = normalize_industry(s)
+    assert out.iloc[0] == "edtech"
+    assert out.iloc[1] == "edtech"
+    assert out.iloc[2] == "edtech"
+    assert out.iloc[3] == "edtech"
+    assert out.iloc[4] == "saas_tech"
+    assert out.iloc[5] == "saas_tech"
