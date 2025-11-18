@@ -1,8 +1,28 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "indian-startups-transformations"
 version = "0.1.0"
-packages = ["transforms"]
+description = "Data cleaning and transformation pipeline for Indian startup funding dataset"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Ashwini Sharma" }
+]
+
+dependencies = [
+    "pandas>=1.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
