@@ -8,6 +8,7 @@ def detect_amount_outliers(df: pd.DataFrame, col: str = "amount") -> pd.DataFram
     df = clean_amount_column(df, col)
     
     def compute_z_score(series: pd.Series) -> pd.Series:
+        series = df["amount"].dropna()
         mean = series.mean()
         std = series.std()
         return (series - mean) / std
@@ -27,16 +28,22 @@ def detect_amount_outliers(df: pd.DataFrame, col: str = "amount") -> pd.DataFram
     return df
 
 def amount_stats_summary(df: pd.DataFrame, column: str) -> pd.DataFrame:
-    stats = {
-        'mean': df[column].mean(),
-        'median': df[column].median(),
-        'std_dev': df[column].std(),
-        'min': df[column].min(),
-        'max': df[column].max(),
-        'q1': df[column].quantile(0.25),
-        'q3': df[column].quantile(0.75),
-        'iqr': df[column].quantile(0.75) - df[column].quantile(0.25),
-        'count_outliers': df['is_outlier'].sum(),
-        'pct_outliers': df['is_outlier'].mean() * 100
+    series = df[column].dropna()
+    Q1 = series.quantile(0.25)
+    Q3 = series.quantile(0.75)
+    IQR = Q3 - Q1
+    outlier_count = df["is_outlier"].sum() if "is_outlier" in df.columns else None
+    pct_outlier = (outlier_count / len(df)) * 100 if outlier_count is not None else None
+
+    return {
+        "min": series.min(),
+        "max": series.max(),
+        "mean": series.mean(),
+        "median": series.median(),
+        "std": series.std(),
+        "Q1": Q1,
+        "Q3": Q3,
+        "IQR": IQR,
+        "outliers": int(outlier_count) if outlier_count is not None else None,
+        "pct_outliers": pct_outlier
     }
-    return pd.DataFrame([stats])
