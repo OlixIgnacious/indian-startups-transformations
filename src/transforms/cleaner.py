@@ -23,7 +23,7 @@ CANONICAL_PATTERNS = {
     r".*unspecified.*": "unspecified",
 }
 
-SPLIT_PATTERN = r",\s*|;\s*|\s+&\s+"
+SPLIT_PATTERN = r",\s*|;\s*|/\s*|\s+and\s+|\s+AND\s+|\n+"
 
 SUFFIX_PATTERN = r"""
     \s+(
@@ -50,24 +50,22 @@ def clean_column_names(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = [_snake_case(col) for col in df.columns]
     return df
 
-def normalize_missing_values(df: pd.DataFrame) -> pd.DataFrame:
-    MISSING_TOKENS = ["N/A", "n/a", "NA", "na", "-", "--", " ", ""]
+def normalize_missing_values(df):
     df = df.copy()
-    df.replace(to_replace=MISSING_TOKENS, value=pd.NA, inplace=True)
+    # normalize common textual tokens (case-insensitive)
+    df = df.replace(r'(?i)^(n/?a|na|none|null|undisclosed|unknown)$', pd.NA, regex=True)
+    # blank-only → NA
+    df = df.replace(r'^\s*$', pd.NA, regex=True)
     return df
 
 def clean_amount_column(df: pd.DataFrame, col: str = "amount") -> pd.DataFrame:
     df = df.copy()
-    df[col] = df[col].astype(str).fillna("")
-    #df[col] = df[col].str.replace(",", "")
-    df[col] = df[col].str.strip()
-    #df[col] = df[col].str.replace(r"[\$,€£¥]", "", regex=True)
-    df[col] = df[col].str.replace(r"[^0-9\.\-]", '', regex=True).replace('', pd.NA)
-    df[col] = pd.to_numeric(df[col], errors='coerce')
-    df[col] = df[col].replace(
-     to_replace=["Undisclosed", "undisclosed"],
-     value=pd.NA,
-    )
+    # handle missing and raw strings first
+    series = df[col].fillna("").astype(str).str.strip()
+    series = series.replace(r"(?i)undisclosed", "", regex=True)  # remove case-insensitive 'Undisclosed'
+    series = series.str.replace(r"[^0-9\.\-]", "", regex=True)
+    series = series.replace("", pd.NA)
+    df[col] = pd.to_numeric(series, errors="coerce")
     return df
 
 def parse_dates(df: pd.DataFrame, col: str = "date") -> pd.DataFrame:
@@ -87,23 +85,23 @@ def canonical_investment_type(s: pd.Series) -> pd.Series:
     out = out.where(out.isin(set(CANONICAL_PATTERNS.values())), other="other")
     return out
 
-def split_investors(df: pd.DataFrame, col: str = "Investor") -> pd.DataFrame:
+def split_investors(df: pd.DataFrame, col: str = "investor") -> pd.DataFrame:
     out = df.copy()
-    out["investor_list"] = out[col].astype(str).str.strip()
-    out["investor_list"]  = out["investor_list"] .fillna("").str.split(SPLIT_PATTERN)
-    out["investor_list"]  = out["investor_list"] .apply(lambda lst: [x.strip() for x in lst if x and x.strip()])
-    out["investor_list"]  = out["investor_list"] .apply(lambda lst: [x for x in lst if x.lower() != "others"])
-    out["investor_count"] = out["investor_list"].apply(len)
+    # ensure we handle missing values BEFORE casting to str
+    series = out[col].where(out[col].notna(), "")
+    series = series.astype(str).str.strip()
+    split_pattern = r",\s*|;\s*|/\s*|\s+and\s+|\s+AND\s+|\n+"
+    out["investor_list"] = series.str.split(split_pattern)
+    # clean each list: strip, drop empty, drop 'others'
+    def clean_list(lst):
+        return [x.strip() for x in lst if x and x.strip() and x.strip().lower() != "others"]
+    out["investor_list"] = out["investor_list"].apply(clean_list)
     out["investor_count"] = out["investor_list"].apply(len)
     return out
 
 def clean_startup_name(name: str) -> str:
     if not isinstance(name, str):
         return name
-    s = name.strip()
-    s = re.sub(SUFFIX_PATTERN, "", s, flags=re.IGNORECASE | re.VERBOSE)
-    s = re.sub(r'\bpvt\.?\b', '', s, flags=re.IGNORECASE)
-    s = re.sub(r"\n", "", s)
+    s = name.strip().replace("\n", " ")
     s = re.sub(r"\s+", " ", s)
-    return s.strip()
-
+    return s

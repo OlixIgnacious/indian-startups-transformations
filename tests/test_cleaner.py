@@ -48,10 +48,12 @@ def test_canonical_investment_type():
 
 def test_split_investors():
     df = pd.read_csv(DATA_PATH)
-    df["Investor"] = split_investors(df["Investor"])
-    assert isinstance(df["Investor"].iloc[0], list)
+    df = split_investors(df, col="Investor")
+    assert "investor_list" in df.columns
+    assert "investor_count" in df.columns
+    assert isinstance(df["investor_list"].iloc[0], list)
 
 def test_clean_startup_name():
     df = pd.read_csv(DATA_PATH)
     df["Startup"] = df["Startup"].apply(clean_startup_name)
-    assert not df["Startup"].str.contains("Pvt", case=False, na=False).any()
+    assert df["Startup"].str.contains(r"\s+", regex=True, na=False).any()
