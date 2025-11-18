@@ -87,6 +87,10 @@ def canonical_investment_type(s: pd.Series) -> pd.Series:
 
 def split_investors(df: pd.DataFrame, col: str = "investor") -> pd.DataFrame:
     out = df.copy()
+    if col not in out.columns:
+        out["investor_list"]  = [[] for _ in range(len(out))]
+        out["investor_count"] = 0
+    return out
     # ensure we handle missing values BEFORE casting to str
     series = out[col].where(out[col].notna(), "")
     series = series.astype(str).str.strip()
