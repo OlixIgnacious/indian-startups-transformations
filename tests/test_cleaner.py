@@ -78,3 +78,30 @@ def test_normalize_industry_edtech_not_saas():
     assert out.iloc[3] == "edtech"
     assert out.iloc[4] == "saas_tech"
     assert out.iloc[5] == "saas_tech"
+
+def test_normalize_city():
+    from transforms.cleaner import normalize_city
+    # representative variants that should collapse to the same canonical city
+    raw = pd.Series([
+        "Bangalore",
+        "Bengaluru",
+        "New Delhi",
+        "Delhi",
+        "Gurgaon",
+        "Gurugram",
+        "  mumbai  ",
+    ])
+    out = normalize_city(raw)
+
+    # Bangalore/Bengaluru should normalize to the same canonical, lowercase form
+    assert out.iloc[0] == out.iloc[1]
+    assert out.iloc[0] == out.iloc[0].lower().strip()
+
+    # New Delhi / Delhi should normalize to the same canonical string
+    assert out.iloc[2] == out.iloc[3]
+
+    # Gurgaon / Gurugram should normalize to the same canonical string
+    assert out.iloc[4] == out.iloc[5]
+
+    # Mumbai: trimming and case-normalization only
+    assert out.iloc[6] == "mumbai"

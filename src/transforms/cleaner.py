@@ -136,3 +136,10 @@ def normalize_industry(series: pd.Series) -> pd.Series:
         return "other"
 
     return s.apply(map_one)
+
+def normalize_city(series: pd.Series) -> pd.Series:
+    s = series.fillna("").astype(str).str.lower().str.strip()
+    s = s.str.replace(r"[\-_/]", " ", regex=True)         # normalize separators
+    s = s.str.replace(r"\s+", " ", regex=True)            # collapse spaces
+    return s.replace(CITY_MAP)  
+
