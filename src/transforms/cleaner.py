@@ -90,15 +90,18 @@ def split_investors(df: pd.DataFrame, col: str = "investor") -> pd.DataFrame:
     if col not in out.columns:
         out["investor_list"]  = [[] for _ in range(len(out))]
         out["investor_count"] = 0
-    return out
+        return out
+
     # ensure we handle missing values BEFORE casting to str
     series = out[col].where(out[col].notna(), "")
     series = series.astype(str).str.strip()
     split_pattern = r",\s*|;\s*|/\s*|\s+and\s+|\s+AND\s+|\n+"
     out["investor_list"] = series.str.split(split_pattern)
+
     # clean each list: strip, drop empty, drop 'others'
     def clean_list(lst):
         return [x.strip() for x in lst if x and x.strip() and x.strip().lower() != "others"]
+
     out["investor_list"] = out["investor_list"].apply(clean_list)
     out["investor_count"] = out["investor_list"].apply(len)
     return out
