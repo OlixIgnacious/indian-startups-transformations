@@ -47,3 +47,24 @@ def amount_stats_summary(df: pd.DataFrame, column: str) -> pd.DataFrame:
         "outliers": int(outlier_count) if outlier_count is not None else None,
         "pct_outliers": pct_outlier
     }
+
+def bucketize_amount(df: pd.DataFrame, col: str = "amount") -> pd.DataFrame:
+    def bucket_amount_value(x: float) -> str:
+        if pd.isna(x):
+            return "unknown"
+        if x <= 1e6:
+            return "very_small"
+        elif x <= 1e7:
+            return "small"
+        elif x <= 5e7:
+            return "medium"
+        elif x <= 2e8:
+            return "large"
+        elif x <= 5e8:
+            return "very_large"
+        else:
+            return "mega"
+    
+    df = df.copy()
+    df['amount_bucket'] = df[col].apply(bucket_amount_value)
+    return df
